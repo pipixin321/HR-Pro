@@ -81,3 +81,13 @@ tensorboard --logdir=./ckpt
 We referenced the repos below for the code.
 - [LACP](https://github.com/Pilhyeon/Learning-Action-Completeness-from-Points)
 - [P-MIL](https://github.com/RenHuan1999/CVPR2023_P-MIL)
+
+## 📑:Citation
+If you find this repo useful for your research, please consider citing our paper:
+@article{zhang2023hr,
+  title={HR-Pro: Point-supervised Temporal Action Localization via Hierarchical Reliability Propagation},
+  author={Zhang, Huaxin and Wang, Xiang and Xu, Xiaohao and Qing, Zhiwu and Gao, Changxin and Sang, Nong},
+  journal={arXiv preprint arXiv:2308.12608},
+  year={2023}
+}
+
