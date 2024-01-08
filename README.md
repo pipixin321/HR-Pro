@@ -61,6 +61,8 @@ Please ensure the data structure is as below.
                 └── ...
 ~~~~
 
+- We provide the I3D features of BEOID dataset [here](https://drive.google.com/file/d/1Xf7-Cg-7urpFVI9T4bqjZp3FdAiIaN4c/view?usp=sharing) and GTEA dataset [here](https://drive.google.com/file/d/1YUmmSK70ozLrSvvIpo64ruJb3ZFrvFzm/view?usp=sharing).
+
 
 ## 🚗:Training and Testing
 - HR-Pro is a two-stage method, you can train it by running `bash run.sh`.
