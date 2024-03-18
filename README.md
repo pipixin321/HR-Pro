@@ -91,8 +91,8 @@ If you find this repo useful for your research, please consider citing our paper
 @article{zhang2023hr,
   title={HR-Pro: Point-supervised Temporal Action Localization via Hierarchical Reliability Propagation},
   author={Zhang, Huaxin and Wang, Xiang and Xu, Xiaohao and Qing, Zhiwu and Gao, Changxin and Sang, Nong},
-  journal={arXiv preprint arXiv:2308.12608},
-  year={2023}
+  journal={Proceedings of the AAAI Conference on Artificial Intelligence},
+  year={2024}
 }
 ```
 
