@@ -22,13 +22,13 @@ class Reliable_Memory(nn.Module):
             for sample in temp_loader:
                 _data, vid_label, point_anno = sample['data'], sample['vid_label'], sample['point_label']
                 outputs = net(_data.to(args.device), vid_label.to(args.device))
-                embeded_feature = outputs['embeded_feature']
+                embedded_feature = outputs['embedded_feature']
                 for b in range(point_anno.shape[0]):
                     gt_class = torch.nonzero(vid_label[b]).squeeze(1).numpy()
                     for c in gt_class:
                         select_id = torch.nonzero(point_anno[b, :, c]).squeeze(1)
                         if select_id.shape[0] > 0:
-                            act_feat = embeded_feature[b, select_id, :]
+                            act_feat = embedded_feature[b, select_id, :]
                             if c not in pfeat_total.keys():
                                 pfeat_total[c] = act_feat
                             else:
@@ -128,9 +128,9 @@ class Encoder(nn.Module):
             for layer in self.RAB:
                 layer_features, _ = layer(layer_features)
             input_features = layer_features[:, :, :T]                           #[B,F,T]
-        embeded_features = self.feature_embedding(input_features)               #[B,F,T]
+        embedded_features = self.feature_embedding(input_features)               #[B,F,T]
 
-        return embeded_features
+        return embedded_features
     
 
 class S_Model(nn.Module):
@@ -159,8 +159,8 @@ class S_Model(nn.Module):
         input_feature: [B,T,F]
         '''
         # >> Encoder and classifier
-        embeded_feature = self.encoder(input_features, self.memory.proto_vectors)   #[B,F,T]
-        cas = self.classifier(embeded_feature)                                      #[B,C+1,T]
+        embedded_feature = self.encoder(input_features, self.memory.proto_vectors)   #[B,F,T]
+        cas = self.classifier(embedded_feature)                                      #[B,C+1,T]
         cas = cas.permute(0, 2, 1)                                                  #[B,T,C+1]
         cas = self.sigmoid(cas)                                                     #[B,T,C+1]
         # class-Specific activation sequence
@@ -186,11 +186,11 @@ class S_Model(nn.Module):
             cas_fuse = cas_fuse,                                                    #[B,T,C+1]
             cas_S = cas_S,                                                          #[B,T,C+1]   
             vid_score = vid_score,                                                  #[B,C]
-            embeded_feature = embeded_feature.permute(0, 2, 1),                     #[B,T,F]                   
+            embedded_feature = embedded_feature.permute(0, 2, 1),                     #[B,T,F]                   
         )
 
     def criterion(self, args, outputs, vid_label, point_label):
-        vid_score, embeded_feature, cas_fuse = outputs['vid_score'], outputs['embeded_feature'], outputs['cas_fuse']
+        vid_score, embedded_feature, cas_fuse = outputs['vid_score'], outputs['embedded_feature'], outputs['cas_fuse']
         point_label = torch.cat((point_label, torch.zeros((point_label.shape[0], point_label.shape[1], 1)).to(args.device)), dim=2)
         act_seed, bkg_seed = utils.select_seed(cas_fuse[:, :, -1].detach().cpu(), point_label.detach().cpu())
 
@@ -202,11 +202,11 @@ class S_Model(nn.Module):
         loss_dict["loss_frame_bkg"] = loss_frame_bkg
 
         # >> feat loss
-        loss_contrastive = self.feat_loss_func(args, embeded_feature, act_seed, bkg_seed, vid_label)
+        loss_contrastive = self.feat_loss_func(args, embedded_feature, act_seed, bkg_seed, vid_label)
         loss_dict["loss_contrastive"] = loss_contrastive
 
         # >> update memory
-        self.memory.update(args, embeded_feature.detach(), act_seed, vid_label)
+        self.memory.update(args, embedded_feature.detach(), act_seed, vid_label)
 
         loss_total = self.lambdas[0] * loss_vid + self.lambdas[1] * loss_frame \
                     + self.lambdas[2] * loss_frame_bkg + self.lambdas[3] * loss_contrastive
@@ -244,7 +244,7 @@ class S_Model(nn.Module):
 
         return loss_vid, loss_frame, loss_frame_bkg
     
-    def feat_loss_func(self, args, embeded_feature, act_seed, bkg_seed, vid_label):
+    def feat_loss_func(self, args, embedded_feature, act_seed, bkg_seed, vid_label):
         loss_contra = 0
         proto_vectors = utils.norm(self.memory.proto_vectors.to(args.device))                                        #[C,N,F]                                                             
         for b in range(act_seed.shape[0]):
@@ -252,8 +252,8 @@ class S_Model(nn.Module):
             gt_class = torch.nonzero(vid_label[b]).squeeze(1)
             act_feat_lst = []
             for c in gt_class:
-                act_feat_lst.append(utils.extract_region_feat(act_seed[b, :, c], embeded_feature[b, :, :]))
-            bkg_feat = utils.extract_region_feat(bkg_seed[b].squeeze(-1), embeded_feature[b, :, :])
+                act_feat_lst.append(utils.extract_region_feat(act_seed[b, :, c], embedded_feature[b, :, :]))
+            bkg_feat = utils.extract_region_feat(bkg_seed[b].squeeze(-1), embedded_feature[b, :, :])
             
             # >> caculate similarity matrix
             if len(bkg_feat) == 0:
